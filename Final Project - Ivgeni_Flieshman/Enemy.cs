@@ -39,10 +39,11 @@ namespace Final_Project___Ivgeni_Flieshman
                 }
 
                 player.health -= this.Damage;
-
+ 
                 if (player.health <= 0)
                 {
-
+                    this.X = 999;
+                    this.Y = 999;
                 }
         }
     }

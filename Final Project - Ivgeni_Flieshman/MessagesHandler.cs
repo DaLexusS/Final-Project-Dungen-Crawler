@@ -2,6 +2,15 @@
 {
     public class MessagesHandler
     {
+
+        public void ResetMessages(MapManager map, Player player)
+        {
+            Console.Clear();
+            Console.ResetColor();
+            map.DrawMap();
+            PrintStats(map.currentMapLevel, player);
+        }
+
         public void PrintStats(int currentLevel, Player player)
         {
             Console.ForegroundColor = ConsoleColor.Green;

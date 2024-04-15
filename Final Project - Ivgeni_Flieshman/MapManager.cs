@@ -1,25 +1,28 @@
-﻿using System.ComponentModel.Design;
-using System.Reflection.Emit;
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
 
 namespace Final_Project___Ivgeni_Flieshman
 {
     public class MapManager
     {
         public int currentMapLevel = 1;
-        public int playerLocationX, playerLocationY;
         public char[][]? currentMap;
         public char ChestIcon = '#';
         public char PlayerIcon = '@';
         public char ExitIcon = 'X';
-        public char EnemeyIcon = '*';
+        public char EnemyIcon = '*';
         public char SpawnPoint = 'E';
         public char FreeSpaceIcon = ' ';
         public int EnemyCounter = 0;
-        public List<Enemy> Enemylist = new List<Enemy>();
+        public List<Enemy> EnemyList = new List<Enemy>();
         public int AttackRange = 2;
+        public int EnemyDitection = 4;
+        public Player player;
 
-        public void InitializeMap()
+        public void InitializeMap(Player givenPlayer)
         {
+            player = givenPlayer;
             currentMap = MapProvider.GetMapForLevel(currentMapLevel);
 
             DrawMap();
@@ -30,64 +33,46 @@ namespace Final_Project___Ivgeni_Flieshman
         {
             Console.Clear();
 
-            foreach (Enemy enemy in Enemylist)
+            for (int row = 0; row < currentMap.Length; row++)
             {
-                int DirX = -1;
-                int DirY = 0;
-
-                if (currentMap[enemy.Y + DirY][enemy.X + DirX] == FreeSpaceIcon)
+                for (int col = 0; col < currentMap[row].Length; col++)
                 {
-                    currentMap[enemy.Y][enemy.X] = FreeSpaceIcon;
-                    enemy.Y += DirY;
-                    enemy.X += DirX;
-
-                    currentMap[enemy.Y][enemy.X] = EnemeyIcon;
-                }
-            }
-
-            for (int i = 0; i < currentMap.Length; i++)
-            {
-                for (int j = 0; j < currentMap[i].Length; j++)
-                {
-                    if (currentMap[i][j] == SpawnPoint)
+                    if (currentMap[row][col] == SpawnPoint)
                     {
-                        currentMap[i][j] = PlayerIcon;
+                        currentMap[row][col] = PlayerIcon;
 
-                        playerLocationX = i;
-                        playerLocationY = j;
-
+                        player.X = row;
+                        player.Y = col;
                     }
                 }
-                Console.WriteLine(currentMap[i]);
+                Console.WriteLine(currentMap[row]);
             }
         }
 
         public void CountEnemies()
         {
-            for (int i = 0; i < currentMap.Length; i++)
+            for (int row = 0; row < currentMap.Length; row++)
             {
-                for (int j = 0; j < currentMap[i].Length; j++)
+                for (int col = 0; col < currentMap[row].Length; col++)
                 {
-                    if (currentMap[i][j] == EnemeyIcon)
+                    if (currentMap[row][col] == EnemyIcon)
                     {
                         Enemy enemy = new Enemy();
-                        enemy.X = j;
-                        enemy.Y = i;
-                        Enemylist.Add(enemy);
+                        enemy.X = row;
+                        enemy.Y = col;
+                        EnemyList.Add(enemy);
                         EnemyCounter++;
                     }
                 }
             }
         }
 
-
         public Enemy CheckNearbyEnemy()
         {
-            foreach (var enemy in Enemylist)
+            foreach (var enemy in EnemyList)
             {
-
-                int distX = Math.Abs(enemy.X - playerLocationX);
-                int distY = Math.Abs(enemy.Y - playerLocationY);
+                int distX = Math.Abs(enemy.X - player.X);
+                int distY = Math.Abs(enemy.Y - player.Y);
 
                 if (distX <= AttackRange && distY <= AttackRange)
                 {
@@ -120,18 +105,9 @@ namespace Final_Project___Ivgeni_Flieshman
 
         public void Interact(Player player)
         {
-            Enemy nearbyEnemy = CheckNearbyEnemy();
-
-            if (nearbyEnemy != null)
+            if (CheckNearbySymbol(ChestIcon))
             {
-                nearbyEnemy.FightLoop(player, this);
-                return;
-            }
-            else if (CheckNearbySymbol(ChestIcon))
-            {
-                // Remove icon from map
                 // Treasure Logic
-                // Update Player damage and weapon/armor
             }
             else if (CheckNearbySymbol(ExitIcon))
             {
@@ -141,47 +117,77 @@ namespace Final_Project___Ivgeni_Flieshman
                 }
 
                 currentMapLevel++;
-                InitializeMap();
+                InitializeMap(player);
             }
 
             DrawMap();
         }
 
-
         public void MovePlayer(int deltaX, int deltaY)
         {
-            int newX = playerLocationX + deltaX;
-            int newY = playerLocationY + deltaY;
+            int newX = player.X + deltaX;
+            int newY = player.Y + deltaY;
 
             if (IsValidMove(newX, newY))
             {
-                currentMap[playerLocationX][playerLocationY] = FreeSpaceIcon;
-                playerLocationX = newX;
-                playerLocationY = newY;
-                currentMap[playerLocationX][playerLocationY] = PlayerIcon;
+                currentMap[player.X][player.Y] = FreeSpaceIcon;
+                player.X = newX;
+                player.Y = newY;
+                currentMap[player.X][player.Y] = PlayerIcon;
                 Console.Clear();
             }
 
             DrawMap();
         }
 
-
-        private bool IsValidMove(int x, int y)
+        public void MoveEnemiesTowardsPlayer()
         {
-            return x >= 0 && x < currentMap.Length &&
-                   y >= 0 && y < currentMap[x].Length &&
-                   currentMap[x][y] == FreeSpaceIcon;
+            int playerRow = player.X;
+            int playerCol = player.Y;
+
+            foreach (Enemy enemy in EnemyList)
+            {
+                if (enemy != null)
+                {
+                    int distX = Math.Abs(playerRow - enemy.X);
+                    int distY = Math.Abs(playerCol - enemy.Y);
+
+                    if (distX <= EnemyDitection && distY <= EnemyDitection)
+                    {
+                        int dirX = Math.Sign(playerRow - enemy.X);
+                        int dirY = Math.Sign(playerCol - enemy.Y);
+
+                        int newRow = enemy.X + dirX;
+                        int newCol = enemy.Y + dirY;
+
+                        if (IsValidMove(newRow, newCol))
+                        {
+                            currentMap[enemy.X][enemy.Y] = FreeSpaceIcon;
+                            enemy.X = newRow;
+                            enemy.Y = newCol;
+                            currentMap[enemy.X][enemy.Y] = EnemyIcon;
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsValidMove(int row, int col)
+        {
+            return row >= 0 && row < currentMap.Length &&
+                   col >= 0 && col < currentMap[row].Length &&
+                   currentMap[row][col] == FreeSpaceIcon;
         }
 
         public bool CheckNearbySymbol(char symbol)
         {
             int proximityDistance = 1;
 
-            for (int i = Math.Max(0, playerLocationX - proximityDistance); i <= Math.Min(currentMap.Length - 1, playerLocationX + proximityDistance); i++)
+            for (int row = Math.Max(0, player.X - proximityDistance); row <= Math.Min(currentMap.Length - 1, player.X + proximityDistance); row++)
             {
-                for (int j = Math.Max(0, playerLocationY - proximityDistance); j <= Math.Min(currentMap[playerLocationX].Length - 1, playerLocationY + proximityDistance); j++)
+                for (int col = Math.Max(0, player.Y - proximityDistance); col <= Math.Min(currentMap[player.X].Length - 1, player.Y + proximityDistance); col++)
                 {
-                    if (currentMap[i][j] == symbol && (i != playerLocationX || j != playerLocationY))
+                    if (currentMap[row][col] == symbol && (row != player.X || col != player.Y))
                     {
                         return true;
                     }
@@ -192,4 +198,3 @@ namespace Final_Project___Ivgeni_Flieshman
         }
     }
 }
-
