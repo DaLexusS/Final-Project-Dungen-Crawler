@@ -1,35 +1,35 @@
 ﻿using Final_Project___Ivgeni_Flieshman;
 
-MapManager Map = new MapManager();
-Player Player = new Player();
-KeyboardManager KeyboardManager = new KeyboardManager();
-MessagesHandler MessagesHandler = new MessagesHandler();
+MapManager mapManager = new MapManager();
+Player player = new Player();
+KeyboardManager keyboardManager = new KeyboardManager();
+MessagesHandler messagesHandler = new MessagesHandler();
 
-Map.InitializeMap(Player);
+mapManager.InitializeMap(player);
 
 Thread combatThread = new Thread(() =>
 {
     while (true)
     {
-        
         Thread.Sleep(1000);
 
-        if (Player.health <= 0)
+        if (player.isAlive)
         {
-            Map.currentMapLevel = 0;
-            Map.InitializeMap(Player);
-            break;
-        }
+            Enemy nearbyEnemy = mapManager.CheckNearbyEnemy();
 
-        Enemy nearbyEnemy = Map.CheckNearbyEnemy();
-
-        if (nearbyEnemy != null)
-        {
-            if (nearbyEnemy.Health > 0)
+            if (nearbyEnemy != null)
             {
-                MessagesHandler.ResetMessages(Map, Player);
-                MessagesHandler.EnemyNearby(nearbyEnemy.EnemyName, nearbyEnemy.Health, nearbyEnemy.Damage);
-                nearbyEnemy.FightLoop(Player, Map);
+                if (nearbyEnemy.Health <= 0)
+                {
+                    nearbyEnemy.Reset();
+                    mapManager.UpdateSprites();
+                    nearbyEnemy = null;
+                }
+                else
+                {
+                    nearbyEnemy.Fight(player, mapManager);
+                    mapManager.DrawMap();
+                }
             }
         }
     }
@@ -39,30 +39,55 @@ combatThread.Start();
 
 while (true)
 {
-    KeyboardManager.ReadKeys(Map, Player);
-
-    MessagesHandler.PrintStats(Map.currentMapLevel, Player);
-
-    if (Map.CheckNearbySymbol(Map.ExitIcon))
+    if (!player.isAlive || player.Health <= 0)
     {
-        MessagesHandler.PlayerTriedExit(Map.EnemyCounter);
-    }
-    else if (Map.CheckNearbySymbol(Map.ChestIcon))
-    {
-        MessagesHandler.TreasureNearby();
+        player.Reset();
+        player = null;
+        player = new Player();
+        mapManager.DeathScreen(player);
     }
 
-    Map.MoveEnemiesTowardsPlayer();
-    /*
-    Enemy nearbyEnemy = Map.CheckNearbyEnemy();
-   
-    if (nearbyEnemy != null)
+    keyboardManager.ReadKeys(mapManager, player);
+    mapManager.DrawMap();
+
+    Treasure nearbyTreasure = mapManager.CheckNearbyChest();
+
+    if (nearbyTreasure != null && mapManager.EnemyCounter <= 0)
     {
-        if (nearbyEnemy.Health > 0) 
+        if (nearbyTreasure.Looted)
         {
-            MessagesHandler.EnemyNearby(nearbyEnemy.EnemyName, nearbyEnemy.Health, nearbyEnemy.Damage);
-
+            nearbyTreasure.ResetChest();
         }
-    }*/
-}
+        else
+        {
+            nearbyTreasure.GiveOption();
+        }
 
+        mapManager.DrawMap();
+        Console.WriteLine(nearbyTreasure.OutCome);
+        nearbyTreasure = null;
+    }
+
+    bool canExit = mapManager.CheckNearbyExit();
+
+    if (canExit)
+    {
+        if (mapManager.EnemyCounter > 0)
+        {
+            messagesHandler.PlayerTriedExit();
+        }
+        else
+        {
+            mapManager.CurrentMapLevel++;
+
+            if (mapManager.CurrentMapLevel > 10)
+            {
+                mapManager.WinScreen(player);
+            }
+            else
+            {
+                mapManager.InitializeMap(player);
+            }
+        }
+    }
+}

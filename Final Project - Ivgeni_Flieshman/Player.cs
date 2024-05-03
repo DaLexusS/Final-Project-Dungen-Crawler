@@ -1,34 +1,60 @@
-﻿using System.Security;
-
-namespace Final_Project___Ivgeni_Flieshman
+﻿namespace Final_Project___Ivgeni_Flieshman
 {
-
     public class Player
     {
-        public int health { get; set; }
-        public string currentWeapon { get; set; }
-        public int damage { get; set; }
+        public int MaxHealth { get; set; }
+        public int Health { get; set; }
+        public string CurrentWeapon { get; set; }
+        public int Damage { get; set; }
+        public int AttackRange { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
 
-        public Player() 
+        public bool isAlive = true;
+
+        public Player()
         {
-            health = 6;
-            currentWeapon = "None";
-            damage = 1;
+            MaxHealth = 10;
+            Health = MaxHealth;
+            CurrentWeapon = "Hands";
+            Damage = 1;
+            AttackRange = 1;
         }
 
-        public void DamagePlayer(int damage)
+        public void TakeDamage(int damage)
         {
-            int playerHealthCalculated = health - damage;
+            int calculatedHealth = Health - damage;
+            Health = Math.Max(0, calculatedHealth);
 
-            health = Math.Max(0, playerHealthCalculated);
+            if (Health <= 0)
+            {
+                isAlive = false;
+                Reset();
+            }
         }
 
-        public void ResetPlayer()
+        public void Heal(int heal)
         {
-            this.X = 1000;
-            this.Y = 1000;
+            int calculatedHealth = Health + heal;
+            Health = Math.Min(MaxHealth, calculatedHealth);
+        }
+
+        public void IncreaseMaxHealth(int healthIncrease)
+        {
+            MaxHealth += healthIncrease;
+        }
+
+        public void EquipWeapon(string weaponName, int damageIncrease)
+        {
+            Damage += damageIncrease;
+            CurrentWeapon = weaponName;
+        }
+
+        public void Reset()
+        {
+            isAlive = false;
+            X = 1000;
+            Y = 1000;
         }
     }
 }

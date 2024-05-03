@@ -2,73 +2,20 @@
 {
     public static char[][] GetMapForLevel(int level)
     {
-        switch (level)
+        string filename = $"level{level}.txt";
+        string[] lines = File.ReadAllLines(Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), $@"..\..\..\Maps\{filename}")));
+        return ReturnMapListed(lines);
+    }
+
+    private static char[][] ReturnMapListed(string[] lines)
+    {
+        int height = lines.Length;
+        int width = lines[0].Length;
+        char[][] map = new char[height][];
+        for (int i = 0; i < height; i++)
         {
-            case 0:
-                return DeathScreen();
-            case 1:
-                return MapForLevel1();
-            case 2:
-                return MapForLevel2();
-            default:
-                throw new ArgumentException("Map for the specified level not found");
+            map[i] = lines[i].ToCharArray();
         }
-    }
-
-    private static char[][] DeathScreen()
-    {
-        return new char[][]
-        {
-            "|---------------------------|".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|         You Died!         |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|Press [ENTER] to start over|".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|---------------------------|".ToCharArray(),
-        };
-    }
-
-    private static char[][] MapForLevel1()
-    {
-        return new char[][]
-        {
-            "|---------------------------|".ToCharArray(),
-            "|    |      *            *  |".ToCharArray(),
-            "|    |                      |".ToCharArray(),
-            "|    |     -------          |".ToCharArray(),
-            "|----|     |     |       #  |".ToCharArray(),
-            "|          |     |     -----|".ToCharArray(),
-            "|          |     |     |    |".ToCharArray(),
-            "|          |     |     |    |".ToCharArray(),
-            "|          |     |     -----|".ToCharArray(),
-            "|          |     |          |".ToCharArray(),
-            "|   E      |     |       X  |".ToCharArray(),
-            "|---------------------------|".ToCharArray(),
-        };
-    }
-
-    private static char[][] MapForLevel2()
-    {
-        return new char[][]
-        {
-            "|---------------------------|".ToCharArray(),
-            "|E   |                    X |".ToCharArray(),
-            "|    |                      |".ToCharArray(),
-            "|    |--------------        |".ToCharArray(),
-            "|-  -|                      |".ToCharArray(),
-            "|                      -----|".ToCharArray(),
-            "|                           |".ToCharArray(),
-            "|                      |    |".ToCharArray(),
-            "|-------------------------  |".ToCharArray(),
-            "|  #      |           |     |".ToCharArray(),
-            "|               |           |".ToCharArray(),
-            "|---------------------------|".ToCharArray(),
-        };
+        return map;
     }
 }

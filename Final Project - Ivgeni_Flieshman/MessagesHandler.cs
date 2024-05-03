@@ -2,56 +2,55 @@
 {
     public class MessagesHandler
     {
-
         public void ResetMessages(MapManager map, Player player)
         {
             Console.Clear();
             Console.ResetColor();
             map.DrawMap();
-            PrintStats(map.currentMapLevel, player);
+            PrintStats(map.CurrentMapLevel, player);
         }
 
         public void PrintStats(int currentLevel, Player player)
         {
+            Console.WriteLine($"Current Level: {currentLevel}");
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"Current Level : {currentLevel}");
-            Console.WriteLine("Press the A/W/S/D or the Arrow keys to move.");
-            Console.WriteLine($"Player health - {player.health}");
-            Console.WriteLine($"Player Damage - {player.damage}");
-            Console.WriteLine($"Player Weapon - {player.currentWeapon}");
+            Console.WriteLine($"Player Health: {player.Health}/{player.MaxHealth}");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine($"Player Damage: {player.Damage}");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Player Weapon: {player.CurrentWeapon}");
             Console.ResetColor();
         }
 
-        public void EnemyNearby(string enemyName, int enemyHealth, int enemyDamage)
+        public void EnemyNearby(Enemy enemy, Player player)
         {
             Console.ForegroundColor = ConsoleColor.DarkMagenta;
-            Console.WriteLine($"You found {enemyName} press [ENTER] to fight.");
-            Console.WriteLine($"Health - {enemyHealth}");
-            Console.WriteLine($"Damage - {enemyDamage}");
+            Console.WriteLine($"You damaged {enemy.Name} with {player.CurrentWeapon}, he damaged you {enemy.Damage} back!");
+            Console.WriteLine($"Enemy has {enemy.Health} HP");
             Console.ResetColor();
         }
 
-        public void TreasureNearby()
+        public void PlayerTriedExit()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("");
+            Console.WriteLine("You need to kill all the enemies on the level in order to exit.");
+            Console.ResetColor();
+        }
+
+        public void TreasureOptions(Treasure treasure)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("You found a treasure chest Press [ENTER] to open it.");
+            Console.WriteLine("You opened the chest choose 1 of those 3 options to go on:");
+            Console.WriteLine($"[1] - Increase health by {treasure.HealthIncrease}, [2] - {treasure.WeaponInside} increasing damage by {treasure.DamageIncrease}, [3] - Heal yourself {treasure.Heal}");
             Console.ResetColor();
+            Console.WriteLine();
         }
 
-        public void PlayerTriedExit(int enemyCounter)
+        public void SteppedOnTrap(int damage)
         {
-            if (enemyCounter != 0)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("");
-                Console.WriteLine("You need to deafet all the enemies on the level in order to exit.");
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("You found the exit Press [ENTER] to exit to the next level.");
-            }
-
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"You stepped on a trap and lose {damage} HP.");
             Console.ResetColor();
         }
     }
